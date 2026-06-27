@@ -26,10 +26,21 @@ codesign --force --sign - --timestamp=none --options runtime "$DEST"
 LSREGISTER="/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/LaunchServices.framework/Versions/A/Support/lsregister"
 "$LSREGISTER" -f "$DEST"
 
+# Ad-hoc signatures change with every rebuild, which invalidates the existing
+# TCC Accessibility grant. Reset it so the app reliably re-prompts on launch
+# instead of silently failing.
+tccutil reset Accessibility com.meti.dockpin >/dev/null 2>&1 || true
+
 # Launch from the new location.
 open "$DEST"
 
-echo
-echo "Installed: $DEST"
-echo "It will show up in Launchpad, Spotlight, and Cmd-Tab."
-echo "Open it once from /Applications so macOS's quarantine check clears."
+cat <<EOF
+
+Installed: $DEST
+Shows up in Launchpad, Spotlight, and Cmd-Tab.
+
+⚠  Accessibility permission was reset (the rebuild changed the signature).
+    macOS should prompt you on launch — click "Open System Settings",
+    then toggle DockPin on. Until you do, the menu bar icon will show
+    a slashed pin and the Dock will keep following your cursor.
+EOF

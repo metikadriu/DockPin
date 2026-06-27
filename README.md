@@ -98,8 +98,8 @@ Open the menu and look at the **status line** at the top — it'll tell you exac
 - *"⚠ Pinned display not connected"* — the screen you previously pinned to is no longer attached. Click **Lock Dock to ▶** and pick a current display.
 - *"Only one display connected"* — there's nothing to pin against; DockPin idles in this state.
 
-**I moved the app between folders and now permission is "granted" but it doesn't work.**
-This is a quirk of ad-hoc-signed apps + macOS's TCC database — the old grant is tied to the old binary path. Fix:
+**I rebuilt / moved the app and now permission is "granted" but it doesn't work.**
+This is a quirk of ad-hoc-signed apps + macOS's TCC database — the grant is tied to the binary's signature hash, and that hash changes on every rebuild. `tools/install.sh` resets the grant automatically on each reinstall so you'll get a fresh prompt. If you need to do it by hand:
 
 ```sh
 tccutil reset Accessibility com.meti.dockpin
@@ -108,6 +108,8 @@ open /Applications/DockPin.app
 ```
 
 …then grant permission again when prompted.
+
+To make the grant survive rebuilds, sign with a stable Apple Developer ID certificate (free, doesn't require the paid program) instead of the ad-hoc signature used by `build.sh`.
 
 **The menu-bar icon shows a pin with a slash through it.**
 That's the visual cue that DockPin can't enforce its lock right now — check the status line for the reason.
