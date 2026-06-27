@@ -1,0 +1,12 @@
+# Build artifacts
+build/
+DockPin.app/
+
+# macOS
+.DS_Store
+*.swp
+
+# Xcode (in case you ever open it in Xcode)
+xcuserdata/
+*.xcuserstate
+DerivedData/
