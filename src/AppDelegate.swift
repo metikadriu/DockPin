@@ -30,15 +30,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "pin.fill",
-                                   accessibilityDescription: "DockPin")
-        }
         rebuildMenu()
     }
 
+    private func updateMenuBarIcon() {
+        guard let button = statusItem.button else { return }
+        let isActive: Bool
+        if case .active = pinner.status { isActive = true } else { isActive = false }
+        let name = isActive ? "pin.fill" : "pin.slash"
+        button.image = NSImage(systemSymbolName: name, accessibilityDescription: "DockPin")
+    }
+
+    private func statusText() -> String {
+        switch pinner.status {
+        case .active(let name):  return "Pinning Dock to \(name)"
+        case .disabled:          return "Disabled"
+        case .noPermission:      return "⚠ Accessibility permission required"
+        case .singleDisplay:     return "Only one display connected"
+        case .unknownDisplay:    return "⚠ Pinned display not connected"
+        }
+    }
+
     private func rebuildMenu() {
+        updateMenuBarIcon()
         let menu = NSMenu()
+
+        let status = NSMenuItem(title: statusText(), action: nil, keyEquivalent: "")
+        status.isEnabled = false
+        menu.addItem(status)
+
+        if case .noPermission = pinner.status {
+            let grant = NSMenuItem(title: "Open Accessibility Settings to fix…",
+                                   action: #selector(openAccessibility),
+                                   keyEquivalent: "")
+            grant.target = self
+            menu.addItem(grant)
+        }
+
+        menu.addItem(.separator())
 
         let active = NSMenuItem(title: "Active",
                                 action: #selector(toggleActive),

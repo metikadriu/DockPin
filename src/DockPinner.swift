@@ -25,10 +25,19 @@ final class DockPinner {
 
     // MARK: - State
 
+    enum Status {
+        case active(displayName: String)
+        case disabled
+        case noPermission
+        case singleDisplay
+        case unknownDisplay
+    }
+
     private struct Zone { let rect: CGRect; let nudge: CGVector }
     private var zones: [Zone] = []
     private var tap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
+    private(set) var status: Status = .disabled
 
     init() {
         if Self.lockedDisplayUUID.isEmpty,
@@ -43,10 +52,23 @@ final class DockPinner {
 
     func refresh() {
         teardownTap()
-        guard Self.isEnabled else { return }
+        status = computeStatus()
+        guard case .active = status else { return }
         zones = computeZones()
-        guard !zones.isEmpty else { return }
         installTap()
+        if tap == nil { status = .noPermission }
+    }
+
+    private func computeStatus() -> Status {
+        guard Self.isEnabled else { return .disabled }
+        let screens = NSScreen.screens
+        guard screens.count > 1 else { return .singleDisplay }
+        let uuid = Self.lockedDisplayUUID
+        guard let locked = screens.first(where: { DisplayUtils.uuid(for: $0) == uuid }) else {
+            return .unknownDisplay
+        }
+        guard AXIsProcessTrusted() else { return .noPermission }
+        return .active(displayName: locked.localizedName)
     }
 
     // MARK: - Geometry

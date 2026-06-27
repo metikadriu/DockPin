@@ -89,6 +89,29 @@ Click the 📌 pin icon in your menu bar:
 
 That's the entire UI. **Hold ⌥ Option** any time you want to temporarily move the Dock to another monitor on purpose.
 
+## Troubleshooting
+
+**The Dock still follows my cursor after install.**
+Open the menu and look at the **status line** at the top — it'll tell you exactly what's wrong:
+
+- *"⚠ Accessibility permission required"* — the most common cause. Click **Open Accessibility Settings to fix…** and toggle DockPin on.
+- *"⚠ Pinned display not connected"* — the screen you previously pinned to is no longer attached. Click **Lock Dock to ▶** and pick a current display.
+- *"Only one display connected"* — there's nothing to pin against; DockPin idles in this state.
+
+**I moved the app between folders and now permission is "granted" but it doesn't work.**
+This is a quirk of ad-hoc-signed apps + macOS's TCC database — the old grant is tied to the old binary path. Fix:
+
+```sh
+tccutil reset Accessibility com.meti.dockpin
+pkill -f DockPin
+open /Applications/DockPin.app
+```
+
+…then grant permission again when prompted.
+
+**The menu-bar icon shows a pin with a slash through it.**
+That's the visual cue that DockPin can't enforce its lock right now — check the status line for the reason.
+
 ## Why this should keep working on future macOS releases
 
 DockPin uses only stable, public Apple APIs:
